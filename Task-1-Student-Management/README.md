@@ -45,9 +45,13 @@ Run `./test_api.sh` (Git Bash / WSL / Linux / macOS) for a full cURL walkthrough
 
 ## Expected cURL output (excerpt)
 
-```
+```text
 POST /students      -> {"department":"Computer Science","email":"ali.khan@szabist.pk","id":1,"name":"Ali Khan"}   (201)
 PUT  /students/1    -> {"department":"Artificial Intelligence", ... "id":1, ...}                                  (200)
 DELETE /students/2  -> {"message":"Student 2 deleted"}                                                           (200)
 GET  /students/999  -> {"error":"Student not found"}                                                              (404)
 ```
+
+## Demonstration Video
+
+[Watch Task 1 — Student Management API Demonstration](https://drive.google.com/file/d/1FYjFGSsm7OcUMIZ90owcqSGdgznD-Gqu/view?usp=sharing)
