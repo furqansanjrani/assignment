@@ -12,8 +12,8 @@ python app.py               # API on http://127.0.0.1:5001
 
 `generate_keys.py` produces:
 
-* `api_keys.json` — only **SHA-256 hashes** of the keys (safe to commit)
-* `keys_to_share.txt` — the raw keys, one per consumer (**git-ignored, never commit**)
+- `api_keys.json` — SHA-256 hashes of the keys (generated locally).
+- `keys_to_share.txt` — the raw keys, one per consumer (**git-ignored, never commit**).
 
 | Consumer | Key |
 |---|---|
@@ -36,6 +36,8 @@ curl -X POST http://127.0.0.1:5001/process \
      -d '{"text":"hello rootsoftware"}'
 ```
 
+Example response:
+
 ```json
 {"consumer":"tester_alpha","operation":"upper","original":"hello rootsoftware","result":"HELLO ROOTSOFTWARE"}
 ```
@@ -44,13 +46,19 @@ Optional `"operation"`: `upper` (default), `lower`, `title`, `reverse`.
 
 | Request | Result |
 |---|---|
-| valid key (each of the 3) | 200 + processed text |
-| wrong key | 403 `{"error":"Invalid API key."}` |
-| no `X-API-Key` header | 401 `{"error":"Missing API key. ..."}` |
-| valid key, no `text` field | 400 |
+| Valid key (each of the 3) | 200 + processed text |
+| Wrong key | 403 `{"error":"Invalid API key."}` |
+| No `X-API-Key` header | 401 `{"error":"Missing API key. ..."}` |
+| Valid key, no `text` field | 400 |
 
 `./test_curl.sh` runs all of the above automatically.
 
 ## Sharing keys securely
 
-Send each tester **only their own key**, on a private channel (direct message or a password manager share), not in the repo, a group chat, or a public screenshot. If a key leaks, re-run `generate_keys.py` (this invalidates all old keys) and re-issue.
+Send each tester **only their own key**, through a private channel (direct message or password manager), not in the repository, a group chat, or a public screenshot.
+
+If a key leaks, rerun `generate_keys.py` to invalidate the old keys and issue new ones.
+
+## Demonstration Video
+
+[Watch Task 2 — API Key Authentication Demonstration](https://drive.google.com/file/d/1OBHLkrtaeu2G4MfXGOpI3bZJql1QdYOf/view?usp=sharing)
