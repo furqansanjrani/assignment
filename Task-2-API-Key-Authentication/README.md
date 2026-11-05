@@ -1,132 +1,56 @@
-# Task 2 — API Key Generation and Sharing
+# Task 2 — API Key Generation and Sharing (RootSoftware Text API)
 
-## Project Description
+`POST /process` takes `{"text": "..."}` and returns the processed (upper-cased) text. Access requires a valid key in the `X-API-Key` header.
 
-This project is a Text Processing REST API developed using Python and Flask. It demonstrates how API keys can be generated, shared securely, and used to authenticate different consumers.
-
-The API allows authorized consumers to perform text-processing operations such as uppercase, lowercase, title case, and reverse.
-
-## Technologies Used
-
-- Python
-- Flask
-- REST API
-- JSON
-- SHA-256 Hashing
-- HTTP Requests
-
-## Features
-
-- Generate three unique API keys using Python's `secrets` module.
-- Authenticate requests using the `X-API-Key` header.
-- Store SHA-256 hashes instead of plaintext API keys.
-- Support three independent consumers.
-- Perform text-processing operations.
-- Reject missing and invalid API keys.
-
-## API Consumers
-
-1. `tester_alpha`
-2. `tester_beta`
-3. `tester_gamma`
-
-Each consumer receives a separate API key.
-
-## API Endpoint
-
-**POST /process**
-
-Example JSON request:
-
-```json
-{
-  "text": "hello world",
-  "operation": "upper"
-}
-```
-
-Example successful response:
-
-```json
-{
-  "consumer": "tester_alpha",
-  "operation": "upper",
-  "original": "hello world",
-  "result": "HELLO WORLD"
-}
-```
-
-## Supported Operations
-
-| Operation | Function |
-|---|---|
-| upper | Converts text to uppercase |
-| lower | Converts text to lowercase |
-| title | Converts text to title case |
-| reverse | Reverses the text |
-
-## How to Run the Project
-
-**Step 1: Install requirements**
+## Run
 
 ```bash
 pip install -r requirements.txt
+python generate_keys.py     # creates 3 keys (secrets module)
+python app.py               # API on http://127.0.0.1:5001
 ```
 
-**Step 2: Generate API keys**
+`generate_keys.py` produces:
 
-```bash
-python generate_keys.py
-```
+* `api_keys.json` — only **SHA-256 hashes** of the keys (safe to commit)
+* `keys_to_share.txt` — the raw keys, one per consumer (**git-ignored, never commit**)
 
-This creates:
-
-- `api_keys.json` — SHA-256 hashes of the generated keys.
-- `keys_to_share.txt` — original API keys for private sharing.
-
-Both generated files should remain local and must not be uploaded to the public repository.
-
-**Step 3: Start the Flask server**
-
-```bash
-python app.py
-```
-
-Server URL:
-
-`http://127.0.0.1:5001`
-
-**Step 4: Test the API**
-
-Send a POST request to `/process` with a valid API key in the `X-API-Key` header and a JSON body containing the text.
-
-## API Testing Results
-
-| Test | Expected HTTP Status |
+| Consumer | Key |
 |---|---|
-| Valid key — tester_alpha | 200 OK |
-| Valid key — tester_beta | 200 OK |
-| Valid key — tester_gamma | 200 OK |
-| Missing API key | 401 Unauthorized |
-| Invalid API key | 403 Forbidden |
-| Valid key with missing text | 400 Bad Request |
+| tester_alpha | sent privately to tester 1 |
+| tester_beta | sent privately to tester 2 |
+| tester_gamma | sent privately to tester 3 |
 
-All three consumer authentication tests and the missing/invalid API key tests were completed successfully.
+## How the key check works
 
-## API Key Security
+1. Read `X-API-Key`. Missing → **401**.
+2. Hash it with SHA-256 and compare with each stored hash using `hmac.compare_digest` (constant-time).
+3. No match → **403**. Match → process the text and return the result (**200**).
 
-API keys are generated using Python's `secrets` module.
+## Testing with cURL (what each tester runs)
 
-The application stores SHA-256 hashes and compares them using `hmac.compare_digest`.
+```bash
+curl -X POST http://127.0.0.1:5001/process \
+     -H "Content-Type: application/json" \
+     -H "X-API-Key: <YOUR_KEY>" \
+     -d '{"text":"hello rootsoftware"}'
+```
 
-Each consumer should receive only their own API key through a private communication channel.
+```json
+{"consumer":"tester_alpha","operation":"upper","original":"hello rootsoftware","result":"HELLO ROOTSOFTWARE"}
+```
 
-The raw API keys and generated local files are excluded from GitHub using `.gitignore`.
+Optional `"operation"`: `upper` (default), `lower`, `title`, `reverse`.
 
-## Demonstration Video
+| Request | Result |
+|---|---|
+| valid key (each of the 3) | 200 + processed text |
+| wrong key | 403 `{"error":"Invalid API key."}` |
+| no `X-API-Key` header | 401 `{"error":"Missing API key. ..."}` |
+| valid key, no `text` field | 400 |
 
-[Watch Task 2 Demonstration](PASTE_YOUR_YOUTUBE_VIDEO_LINK_HERE)
+`./test_curl.sh` runs all of the above automatically.
 
-## Conclusion
+## Sharing keys securely
 
-This project demonstrates API key generation, secure key sharing, authentication, and controlled access to a Flask REST API. It also demonstrates how valid requests are processed while missing or invalid API keys are rejected.
+Send each tester **only their own key**, on a private channel (direct message or a password manager share), not in the repo, a group chat, or a public screenshot. If a key leaks, re-run `generate_keys.py` (this invalidates all old keys) and re-issue.
